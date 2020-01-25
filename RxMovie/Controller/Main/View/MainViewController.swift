@@ -14,16 +14,21 @@ class MainViewController: UIViewController {
 
     @IBOutlet weak var tableView: UITableView!
     
+    private var refreshController: UIRefreshControl!
+    
     private var viewModel = MainViewModel()
     private let disposeBag = DisposeBag()
     
     override func viewDidLoad() {
         super.viewDidLoad()
 
+        configureRefreshController()
         setup()
     }
     
     func setup() {
+        tableView.refreshControl = refreshController
+        
         viewModel.dataSource
             .bind(to: tableView.rx.items(cellIdentifier: "cell")) { index, model, cell in
                 cell.textLabel?.text = model.name
@@ -41,4 +46,12 @@ class MainViewController: UIViewController {
             .disposed(by: disposeBag)
     }
 
+    func configureRefreshController() {
+        refreshController = UIRefreshControl()
+        refreshController.rx.controlEvent(UIControl.Event.valueChanged)
+            .subscribe(onNext: { [weak self] in
+                self?.refreshController.endRefreshing()
+            })
+            .disposed(by: disposeBag)
+    }
 }
